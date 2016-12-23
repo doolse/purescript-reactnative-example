@@ -7,9 +7,9 @@ This is a `purescript-reactnative` & `purescript-react-simpelaction` based port 
 - Scrolling beyond the first 10 results is not supported yet
 - Queries aren't cached
 
-# Running it on an emulator
+# Running it on Android
 
-Start your emulator
+Start your emulator or phone
 
 ```
 npm install
@@ -22,4 +22,10 @@ You may also have to start the react-native dev server with (in the repo dir):
 
 ```
 react-native start
+```
+
+also you may need to proxy the dev server with:
+
+```
+adb reverse tcp:8081 tcp:8081
 ```
