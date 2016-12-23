@@ -1,0 +1,22 @@
+{
+  "name": "purescript-reactnative-example",
+  "description": "",
+  "main": "Main.purs",
+  "authors": [
+    "Jolse Maginnis <doolse@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "purescript-reactnative": "doolse/purescript-reactnative",
+    "purescript-affjax": "^3.0.2"
+  }
+}
