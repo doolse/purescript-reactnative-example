@@ -6,7 +6,7 @@ import React.SimpleAction (handleEff, propsRenderer, unsafeWithRef)
 import ReactNative.Components.ActivityIndicator (activityIndicator', large)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.TextInput (autoCapitalize, focus, textInput')
-import ReactNative.Components.Touchable (NativeBackground, selectableBackground, selectableBackgroundBorderless, touchableNativeFeedback')
+import ReactNative.Components.Touchable (TouchableNativeBackground, selectableBackground, selectableBackgroundBorderless, touchableNativeFeedback')
 import ReactNative.Components.View (view, view_)
 import ReactNative.Events (TextInputEvent, EventHandler)
 import ReactNative.Platform (platformVersion)
@@ -23,7 +23,7 @@ type SearchBarProps eff = {
 }
 data Action = Focus
 
-searchBGColor :: NativeBackground
+searchBGColor :: TouchableNativeBackground
 searchBGColor = if platformVersion >= 21 then selectableBackgroundBorderless else selectableBackground
 
 searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
