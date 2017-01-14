@@ -1,24 +1,31 @@
 {
-	"name": "reactnativeMovieExample",
-	"version": "0.0.1",
-	"private": true,
-	"scripts": {
-		"start": "node node_modules/react-native/local-cli/cli.js start",
-		"test": "jest",
-		"build": "pulp build --to index.android.js",
-		"watch": "pulp -w build --to index.android.js"
-	},
-	"dependencies": {
-		"react": "15.4.1",
-		"react-native": "0.39.2"
-	},
-	"devDependencies": {
-		"babel-jest": "18.0.0",
-		"babel-preset-react-native": "1.9.1",
-		"jest": "18.0.0",
-		"react-test-renderer": "15.4.1"
-	},
-	"jest": {
-		"preset": "react-native"
-	}
+  "name": "reactnativeMovieExample",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "postinstall": "./node_modules/.bin/bower cache clean && ./node_modules/.bin/bower install",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest",
+    "build:ios": "rimraf output && pulp build --to index.js",
+    "watch:ios": "rimraf output && pulp -w build --to index.js",
+    "build:android": "pulp build --to index.android.js",
+    "watch:android": "pulp -w build --to index.android.js"
+  },
+  "dependencies": {
+    "react": "15.4.1",
+    "react-native": "0.39.2"
+  },
+  "devDependencies": {
+    "babel-jest": "18.0.0",
+    "babel-preset-react-native": "1.9.1",
+    "bower": "^1.8.0",
+    "jest": "18.0.0",
+    "pulp": "^10.0.0",
+    "purescript": "^0.10.5",
+    "react-test-renderer": "15.4.1",
+    "rimraf": "^2.5.4"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
 }

@@ -16,8 +16,12 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-reactnative": "^1.0.0",
     "purescript-affjax": "^3.0.2",
-    "purescript-react-simpleaction": "^0.9.1"
+    "purescript-react-simpleaction": "^0.9.1",
+    "purescript-reactnative": "https://github.com/sectore/purescript-reactnative.git#ios-update"
+  },
+  "devDependencies": {
+    "purescript-debug": "^2.0.0",
+    "purescript-console": "^2.0.0"
   }
 }

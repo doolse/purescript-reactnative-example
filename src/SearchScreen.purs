@@ -3,23 +3,29 @@ module SearchScreen where
 import Prelude
 import Control.Monad.Aff (Canceler, cancel, forkAff, later', nonCanceler)
 import Control.Monad.Aff.AVar (AVar, makeVar', putVar, takeVar)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Reader (ask, runReaderT)
 import Control.Monad.Writer.Trans (lift)
 import Data.Function.Uncurried (mkFn3)
 import Data.Maybe (Maybe(Just, Nothing), maybe)
-import Movie.Data (OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
-import Movie.SearchBar (searchBar)
+import Movie.Data (MovieDetails, MovieNavigator(..), OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
+import Movie.SearchBar (SearchBarProps)
+import Movie.SearchBar.Android (searchBar) as SearchBarAndroid
+import Movie.SearchBar.Ios (searchBar) as SearchBarIos
 import Movies.MovieCell (movieCell)
-import React (ReactClass, ReactElement, createClass, createElement, spec)
+import Movies.MovieScreen (MovieScreenProps(..), movieScreen)
+import React (ReactClass, ReactElement, ReactState, ReadWrite, createClass, createElement, spec)
 import React.SimpleAction (Dispatcher(..), dispatchEff, getProps, getState, modifyState, stateRenderer, unsafeWithRef, withDispatcher)
 import ReactNative.API (keyboardDismiss)
 import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRowCount, listView', listViewDataSource, rowRenderer')
 import ReactNative.Components.Navigator (Navigator, push)
+import ReactNative.Components.NavigatorIOS (NavigatorIOS)
 import ReactNative.Components.ScrollView (keyboardDismissMode, scrollTo)
 import ReactNative.Components.Text (text)
 import ReactNative.Components.View (view, view')
+import ReactNative.Platform (platformOS, Platform(..))
 import ReactNative.PropTypes (center, unsafeRef)
 import ReactNative.PropTypes.Color (rgba, rgbi, white)
 import ReactNative.Styles (Styles, backgroundColor, flex, height, marginLeft, marginTop, marginVertical, opacity, staticStyles, styles')
@@ -48,20 +54,31 @@ initialState = {
   , queryNumber: 0
 }
 
+newtype SearchScreenProps = SearchScreenProps {
+  navigator :: MovieNavigator
+}
 
-searchScreen :: (Navigator Route) -> ReactElement
-searchScreen navigator = createElement searchScreenClass {navigator} []
+searchScreenAndroid :: forall p. { navigator :: Navigator | p } -> ReactElement
+searchScreenAndroid props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigator props.navigator}) []
 
-searchScreenClass :: ReactClass {navigator::Navigator Route}
-searchScreenClass = createClass $ customize (spec initialState $ stateRenderer (withDispatcher eval render))
+searchScreenIos :: forall p. { navigator :: NavigatorIOS | p } -> ReactElement
+searchScreenIos props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigatorIOS props.navigator}) []
+
+searchScreenClass :: ReactClass SearchScreenProps
+searchScreenClass = createClass <<< customize <<< spec initialState <<< stateRenderer $ withDispatcher eval render
   where
-    customize = _ {componentDidMount = dispatchEff $ eval $ Search "frogs" }
+    customize = _ { componentDidMount = dispatchEff $ eval $ Search "frogs" }
+
+    searchBarViewByPlatform :: forall eff'. Platform -> SearchBarProps eff' -> ReactElement
+    searchBarViewByPlatform IOS = SearchBarIos.searchBar
+    searchBarViewByPlatform Android = SearchBarAndroid.searchBar
 
     render (Dispatcher d) s@{isLoading} = view sheet.container [
-        searchBar {
-              onSearchChange: d $ Search <<< _.nativeEvent.text
-            , onFocus: d \_ -> ScrollTop
-            , isLoading }
+      searchBarViewByPlatform platformOS $ {
+            onSearchChange: d $ Search <<< _.nativeEvent.text
+          , onFocus: d \_ -> ScrollTop
+          , isLoading }
+
       , view sheet.separator []
       , if getRowCount s.dataSource == 0 then noMovies else listView' _ { ref= unsafeRef "listview"
           , renderSeparator=mkFn3 renderSeparator
@@ -94,7 +111,7 @@ searchScreenClass = createClass $ customize (spec initialState $ stateRenderer (
       lift $ putVar av newc
       where
         doSearch = do
-            modifyState _ {isLoading=true, filter=q}
+            modifyState _ {isLoading=true, filter=q, dataSource=listViewDataSource []}
             movies <- lift $ searchOMDB q
             modifyState \s -> s {dataSource=cloneWithRows s.dataSource movies, isLoading=false}
         createAvar = do
@@ -104,11 +121,21 @@ searchScreenClass = createClass $ customize (spec initialState $ stateRenderer (
 
     eval (Select m) = do
       pure unit
-      {navigator} <- getProps
+      SearchScreenProps {navigator} <- getProps
       liftEff $ keyboardDismiss
       md <- lift $ loadDetails m
-      lift $ liftEff $ push navigator (ShowMovie md)
+      lift $ liftEff $ pushRoute navigator md
 
+pushRoute :: forall eff. MovieNavigator -> MovieDetails -> Eff ( state :: ReactState ReadWrite | eff) Unit
+pushRoute (MovieNavigator n) md = push n (ShowMovie md)
+pushRoute (MovieNavigatorIOS n) md =
+  push n (mkMovieRoute md)
+    where
+        mkMovieRoute movie =
+          { title: movie.title
+            , component: movieScreen,
+            passProps: MovieScreenProps { movie }
+          }
 
 sheet :: { container :: Styles
 , centerText :: Styles
