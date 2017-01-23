@@ -7,4 +7,5 @@ type SearchBarProps eff = {
   , onFocus :: EventHandler eff TextInputEvent
   , isLoading :: Boolean
 }
+
 data Action = Focus
