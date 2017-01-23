@@ -18,6 +18,6 @@
   "dependencies": {
     "purescript-reactnative": "^1.0.0",
     "purescript-affjax": "^3.0.2",
-    "purescript-react-simpleaction": "^0.9.1"
+    "purescript-dispatcher-react": "^1.0.0"
   }
 }

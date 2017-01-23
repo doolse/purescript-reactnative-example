@@ -12,8 +12,9 @@ import Data.Maybe (Maybe(Just, Nothing), maybe)
 import Movie.Data (OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
 import Movie.SearchBar (searchBar)
 import Movies.MovieCell (movieCell)
-import React (ReactClass, ReactElement, createClass, createElement, spec)
-import React.SimpleAction (Dispatcher(..), dispatchEff, getProps, getState, modifyState, stateRenderer, unsafeWithRef, withDispatcher)
+import React (ReactClass, ReactElement, createElement)
+import Dispatcher.React (createLifecycleComponent, didMount, getProps, getState, modifyState, unsafeWithRef)
+import Dispatcher (DispatchEffFn(DispatchEffFn))
 import ReactNative.API (keyboardDismiss)
 import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRowCount, listView', listViewDataSource, rowRenderer')
 import ReactNative.Components.Navigator (Navigator, push)
@@ -53,13 +54,11 @@ searchScreen :: (Navigator Route) -> ReactElement
 searchScreen navigator = createElement searchScreenClass {navigator} []
 
 searchScreenClass :: ReactClass {navigator::Navigator Route}
-searchScreenClass = createClass $ customize (spec initialState $ stateRenderer (withDispatcher eval render))
+searchScreenClass = createLifecycleComponent (didMount $ Search "frogs") initialState render eval
   where
-    customize = _ {componentDidMount = dispatchEff $ eval $ Search "frogs" }
-
-    render (Dispatcher d) s@{isLoading} = view sheet.container [
+    render s@{isLoading} (DispatchEffFn d) = view sheet.container [
         searchBar {
-              onSearchChange: d $ Search <<< _.nativeEvent.text
+              onSearchChange: d \ev -> Search ev.nativeEvent.text
             , onFocus: d \_ -> ScrollTop
             , isLoading }
       , view sheet.separator []
