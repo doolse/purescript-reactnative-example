@@ -21,7 +21,7 @@ import ReactNative.PropTypes.Color (rgbi)
 import ReactNative.Styles (Styles, staticStyles)
 import ReactNative.Styles.Text (color)
 
-data MovieNavigator = MovieNavigator Navigator | MovieNavigatorIOS NavigatorIOS
+data MovieNavigator = MovieNavigator (Navigator Route) | MovieNavigatorIOS NavigatorIOS
 
 type MovieR r = {
     id :: String

@@ -1,7 +1,6 @@
 module Movies.MovieScreen where
 
 import Prelude
-import Debug.Trace (trace, traceAny)
 import Movie.Data (MovieDetails, getImageSource, getStyleFromScore, getTextFromScore)
 import React (ReactElement)
 import ReactNative.Components.Image (image)
@@ -13,12 +12,8 @@ import ReactNative.Styles (Styles, backgroundColor, borderColor, borderWidth, fl
 import ReactNative.Styles.Flex (alignSelf, flexDirection, flexStart, justifyContent, row, spaceBetween)
 import ReactNative.Styles.Text (fontFamily, fontSize, fontWeight, weight500)
 
-newtype MovieScreenProps = MovieScreenProps {
-  movie :: MovieDetails
-}
-
-movieScreen :: MovieScreenProps -> ReactElement
-movieScreen (MovieScreenProps props) = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
+movieScreen :: forall r. {movie::MovieDetails|r} -> ReactElement
+movieScreen props = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
     view sheet.mainSection [
       image sheet.detailsImage $ getImageSource movie
     , view sheet.rightPane [

@@ -1,21 +1,21 @@
 module Movie.SearchBar.Ios where
 
 import Prelude
-import React (ReactClass, ReactElement, createClass, createElement, spec)
-import React.SimpleAction (propsRenderer)
+import Dispatcher.React (ReactProps(..), createComponent)
+import Movie.SearchBar (SearchBarProps)
+import React (ReactClass, ReactElement, createElement)
+import ReactNative.Components.ActivityIndicator (activityIndicator', large)
 import ReactNative.Components.TextInput (autoCapitalize, textInput')
 import ReactNative.Components.View (view)
-import ReactNative.Components.ActivityIndicator (activityIndicator', large)
 import ReactNative.PropTypes (center, unsafeRef)
 import ReactNative.Styles (Styles, flex, height, marginTop, padding, paddingLeft, staticStyles, width)
 import ReactNative.Styles.Flex (alignItems, flexDirection, row)
 import ReactNative.Styles.Text (fontSize)
-import Movie.SearchBar (SearchBarProps)
 
 searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
-searchBarClass = createClass $ spec unit $ propsRenderer render
+searchBarClass = createComponent unit render unit
   where
-    render t p = view sheet.searchBar [
+    render _ (ReactProps p) = view sheet.searchBar [
       textInput' _ {
         ref = unsafeRef "input"
       , autoCapitalize = autoCapitalize.none

@@ -1,4 +1,4 @@
-module Main.Android where
+module Main where
 
 import Prelude
 import Control.Monad.Eff (Eff)
@@ -6,9 +6,10 @@ import Data.Array (length)
 import Data.Function.Eff (mkEffFn1)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)
+import Dispatcher.React (createComponent)
 import Movie.Data (Route(ShowMovie, Search))
-import Movies.MovieScreen (MovieScreenProps(..), movieScreen)
-import React (ReactClass, createClass, spec)
+import Movies.MovieScreen (movieScreen)
+import React (ReactClass)
 import ReactNative.API (REGISTER, registerComponent)
 import ReactNative.Android.API (addBackEventCallback)
 import ReactNative.Android.Components (toolbarAndroid')
@@ -35,15 +36,14 @@ sheet = {
 }
 
 appAndroid :: ReactClass Unit
-appAndroid = createClass $ spec unit render
+appAndroid = createComponent unit render unit
   where
-    render this = pure $ navigator' _
-                                  { ref = refFunc $ mkEffFn1 addBackListener
-                                    , style = sheet.container
-                                    , configureScene = sceneConfig sceneConfigs.fadeAndroid
-                                  }
-                                  initialRoute
-                                  (sceneRenderer routeMapper)
+    render _ = navigator' _ { ref = refFunc $ mkEffFn1 addBackListener
+                              , style = sheet.container
+                              , configureScene = sceneConfig sceneConfigs.fadeAndroid
+                            }
+                            initialRoute
+                            (sceneRenderer routeMapper)
     addBackListener navU = case toMaybe navU of
         Just nav -> addBackEventCallback $ mkEffFn1 \_ ->
                       if (length $ getCurrentRoutes nav) > 1 then pop nav *> pure true
@@ -59,7 +59,7 @@ appAndroid = createClass $ spec unit render
         , navIcon=nativeImageSource {android:"android_back_white", height:96, width:96}
         , onIconClicked = mkEffFn1 \_ -> pop nav
         } []
-    , movieScreen $ MovieScreenProps {movie}
+    , movieScreen {movie}
     ]
 
 

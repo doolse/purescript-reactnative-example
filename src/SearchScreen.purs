@@ -10,19 +10,20 @@ import Control.Monad.Reader (ask, runReaderT)
 import Control.Monad.Writer.Trans (lift)
 import Data.Function.Uncurried (mkFn3)
 import Data.Maybe (Maybe(Just, Nothing), maybe)
+import Dispatcher (DispatchEffFn(DispatchEffFn))
+import Dispatcher.React (createLifecycleComponent, didMount, getProps, getState, modifyState, unsafeWithRef)
 import Movie.Data (MovieDetails, MovieNavigator(..), OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
 import Movie.SearchBar (SearchBarProps)
 import Movie.SearchBar.Android (searchBar) as SearchBarAndroid
 import Movie.SearchBar.Ios (searchBar) as SearchBarIos
 import Movies.MovieCell (movieCell)
-import Movies.MovieScreen (MovieScreenProps(..), movieScreen)
-import React (ReactClass, ReactElement, ReactState, ReadWrite, createClass, createElement, spec)
-import Dispatcher.React (Dispatcher(..), dispatchEff, getProps, getState, modifyState, stateRenderer, unsafeWithRef, withDispatcher)
-import Dispatcher (DispatchEffFn(DispatchEffFn))
+import Movies.MovieScreen (movieScreen)
+import React (ReactClass, ReactElement, ReactState, ReadWrite, createElement)
 import ReactNative.API (keyboardDismiss)
 import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRowCount, listView', listViewDataSource, rowRenderer')
 import ReactNative.Components.Navigator (Navigator, push)
-import ReactNative.Components.NavigatorIOS (NavigatorIOS)
+import ReactNative.Components.NavigatorIOS (NavigatorIOS, mkRoute)
+import ReactNative.Components.NavigatorIOS (push) as NIOS
 import ReactNative.Components.ScrollView (keyboardDismissMode, scrollTo)
 import ReactNative.Components.Text (text)
 import ReactNative.Components.View (view, view')
@@ -59,22 +60,20 @@ newtype SearchScreenProps = SearchScreenProps {
   navigator :: MovieNavigator
 }
 
-searchScreenAndroid :: forall p. { navigator :: Navigator | p } -> ReactElement
+searchScreenAndroid :: forall p. { navigator :: Navigator Route | p } -> ReactElement
 searchScreenAndroid props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigator props.navigator}) []
 
 searchScreenIos :: forall p. { navigator :: NavigatorIOS | p } -> ReactElement
 searchScreenIos props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigatorIOS props.navigator}) []
 
 searchScreenClass :: ReactClass SearchScreenProps
-searchScreenClass = createClass <<< customize <<< spec initialState <<< stateRenderer $ withDispatcher eval render
+searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones") initialState render eval
   where
-    customize = _ { componentDidMount = dispatchEff $ eval $ Search "frogs" }
-
     searchBarViewByPlatform :: forall eff'. Platform -> SearchBarProps eff' -> ReactElement
     searchBarViewByPlatform IOS = SearchBarIos.searchBar
     searchBarViewByPlatform Android = SearchBarAndroid.searchBar
 
-    render (Dispatcher d) s@{isLoading} = view sheet.container [
+    render s@{isLoading} (DispatchEffFn d) = view sheet.container [
       searchBarViewByPlatform platformOS $ {
             onSearchChange: d $ Search <<< _.nativeEvent.text
           , onFocus: d \_ -> ScrollTop
@@ -130,12 +129,12 @@ searchScreenClass = createClass <<< customize <<< spec initialState <<< stateRen
 pushRoute :: forall eff. MovieNavigator -> MovieDetails -> Eff ( state :: ReactState ReadWrite | eff) Unit
 pushRoute (MovieNavigator n) md = push n (ShowMovie md)
 pushRoute (MovieNavigatorIOS n) md =
-  push n (mkMovieRoute md)
+  NIOS.push n (mkMovieRoute md)
     where
-        mkMovieRoute movie =
-          { title: movie.title
-            , component: movieScreen,
-            passProps: MovieScreenProps { movie }
+        mkMovieRoute movie = mkRoute
+          {   title: movie.title
+            , component: movieScreen
+            , passProps: {movie}
           }
 
 sheet :: { container :: Styles

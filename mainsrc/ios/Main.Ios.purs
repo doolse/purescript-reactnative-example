@@ -1,10 +1,11 @@
-module Main.Ios where
+module Main where
 
 import Prelude
 import Control.Monad.Eff (Eff)
-import React (ReactClass, createClass, spec)
+import Dispatcher.React (createComponent)
+import React (ReactClass)
 import ReactNative.API (REGISTER, registerComponent)
-import ReactNative.Components.NavigatorIOS (navigatorIOS')
+import ReactNative.Components.NavigatorIOS (mkRoute, navigatorIOS')
 import ReactNative.PropTypes.Color (white)
 import ReactNative.Styles (Styles, backgroundColor, flex, staticStyles)
 import SearchScreen (searchScreenIos)
@@ -20,12 +21,13 @@ sheet = {
 }
 
 appIos :: ReactClass Unit
-appIos = createClass $ spec unit render
+appIos = createComponent unit render unit
   where
-    render this = pure $ navigatorIOS' _{style = sheet.container} initialRoute
-    initialRoute = {
+    render _ = navigatorIOS' _{style = sheet.container} initialRoute
+    initialRoute = mkRoute {
       title: "Movies"
       , component: searchScreenIos
+      , passProps: {}
     }
 
 main :: forall eff. Eff ( register :: REGISTER | eff) Unit

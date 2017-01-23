@@ -1,8 +1,10 @@
 module Movie.SearchBar.Android where
 
 import Prelude
-import React (ReactClass, ReactElement, createClass, createElement, spec)
-import React.SimpleAction (handleEff, propsRenderer, unsafeWithRef)
+import Dispatcher (DispatchEffFn(DispatchEffFn), effEval)
+import Dispatcher.React (ReactProps(..), createComponent, unsafeWithRef)
+import Movie.SearchBar (SearchBarProps)
+import React (ReactClass, ReactElement, createElement)
 import ReactNative.Components.ActivityIndicator (activityIndicator', large)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.TextInput (autoCapitalize, focus, textInput')
@@ -14,16 +16,15 @@ import ReactNative.PropTypes.Color (rgba, rgbi, transparent, white)
 import ReactNative.Styles (Styles, backgroundColor, flex, height, marginHorizontal, marginRight, padding, staticStyles, width)
 import ReactNative.Styles.Flex (alignItems, flexDirection, row)
 import ReactNative.Styles.Text (bold, color, fontSize, fontWeight)
-import Movie.SearchBar (SearchBarProps)
 
 searchBGColor :: TouchableNativeBackground
 searchBGColor = if platformVersion >= 21 then selectableBackgroundBorderless else selectableBackground
 
 searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
-searchBarClass = createClass $ spec unit $ propsRenderer render
+searchBarClass = createComponent unit render unit
   where
-    render t p = view sheet.searchBar [
-        touchableNativeFeedback' _ {background=searchBGColor, onPress=handleEff t $ \_ -> unsafeWithRef focus "input"} $
+    render _ (ReactProps p) (DispatchEffFn d) = view sheet.searchBar [
+        touchableNativeFeedback' _ {background=searchBGColor, onPress=d $ effEval $ \_ -> unsafeWithRef focus "input"} $
           view_ [ image sheet.icon $ nativeImageSource {
                   android: "android_search_white",
                   width: 96,

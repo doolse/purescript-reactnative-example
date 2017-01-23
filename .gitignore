@@ -41,7 +41,10 @@ buck-out/
 android/app/libs
 *.keystore
 index.android.js
+index.ios.js
 output/
 bower_components/
 .psc-ide-port
 .pulp-cache
+
+yarn.lock
