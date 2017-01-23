@@ -1,6 +1,7 @@
 module Movies.MovieScreen where
 
 import Prelude
+import Debug.Trace (trace, traceAny)
 import Movie.Data (MovieDetails, getImageSource, getStyleFromScore, getTextFromScore)
 import React (ReactElement)
 import ReactNative.Components.Image (image)
@@ -12,30 +13,33 @@ import ReactNative.Styles (Styles, backgroundColor, borderColor, borderWidth, fl
 import ReactNative.Styles.Flex (alignSelf, flexDirection, flexStart, justifyContent, row, spaceBetween)
 import ReactNative.Styles.Text (fontFamily, fontSize, fontWeight, weight500)
 
+newtype MovieScreenProps = MovieScreenProps {
+  movie :: MovieDetails
+}
 
-
-movieScreen :: MovieDetails -> ReactElement
-movieScreen m = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
+movieScreen :: MovieScreenProps -> ReactElement
+movieScreen (MovieScreenProps props) = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
     view sheet.mainSection [
-      image sheet.detailsImage $ getImageSource m
+      image sheet.detailsImage $ getImageSource movie
     , view sheet.rightPane [
-        text sheet.movieTitle m.title
-      , text_ m.year
+        text sheet.movieTitle movie.title
+      , text_ movie.year
       , view sheet.mpaaWrapper [
-          text sheet.mpaaText m.mpaa_rating
+          text sheet.mpaaText movie.mpaa_rating
         ]
       , ratings
       ]
     ]
   , sep
-  , text_ m.synopsis
+  , text_ movie.synopsis
   , sep
   , cast
   ]
   where
+    movie = props.movie
     sep = view sheet.separator []
     ratings = view_ [
-      rating m.score "Critics"
+      rating movie.score "Critics"
     ]
     rating s t = view sheet.rating [
       text sheet.ratingTitle $ t <> ":"
@@ -43,7 +47,7 @@ movieScreen m = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
     ]
     cast = view_ $ [
       text sheet.castTitle "Actors"
-    ] <> ((\name -> text' _ {key=name, style=sheet.castActor} name) <$> m.actors)
+    ] <> ((\name -> text' _ {key=name, style=sheet.castActor} name) <$> movie.actors)
 
 
 sheet :: { contentContainer :: Styles

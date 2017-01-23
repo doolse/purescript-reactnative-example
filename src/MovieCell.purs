@@ -5,7 +5,8 @@ import Movie.Data (Movie, getImageSource, getStyleFromScore, getTextFromScore)
 import React (ReactElement)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.Text (text, text', textElem, texts')
-import ReactNative.Components.Touchable (touchableNativeFeedback)
+import ReactNative.Components.Touchable (touchableHilight)
+import ReactNative.Components.TouchableNativeFeedback (touchableNativeFeedback)
 import ReactNative.Components.View (view)
 import ReactNative.Events (EventHandler, TouchEvent)
 import ReactNative.PropTypes (center)
@@ -13,6 +14,7 @@ import ReactNative.PropTypes.Color (rgba, rgbi, white)
 import ReactNative.Styles (Styles, backgroundColor, flex, hairlineWidth, height, marginBottom, marginLeft, marginRight, padding, staticStyles, width)
 import ReactNative.Styles.Flex (alignItems, flexDirection, row)
 import ReactNative.Styles.Text (color, fontSize, fontWeight, weight500)
+import ReactNative.Platform (platformOS, Platform(..))
 
 type Props eff = {
     key :: String
@@ -21,9 +23,12 @@ type Props eff = {
 }
 
 movieCell :: forall eff. Movie -> {onSelect::EventHandler eff TouchEvent} -> ReactElement
-movieCell m p = let score = m.score
-    in touchableNativeFeedback p.onSelect $
-    view sheet.row [
+movieCell m p =
+    let score = m.score
+        touchableView :: forall eff'. Platform -> EventHandler eff' TouchEvent -> ReactElement -> ReactElement
+        touchableView IOS = touchableHilight
+        touchableView Android = touchableNativeFeedback
+    in (touchableView platformOS) p.onSelect $ view sheet.row [
         image sheet.cellImage (getImageSource m)
       , view sheet.textContainer [
           text' _ {style=sheet.movieTitle, numberOfLines=2} m.title

@@ -16,8 +16,12 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-reactnative": "^1.0.0",
     "purescript-affjax": "^3.0.2",
-    "purescript-dispatcher-react": "^1.0.0"
+    "purescript-dispatcher-react": "^1.0.0",
+    "purescript-reactnative": "^2.39.0"
+  },
+  "devDependencies": {
+    "purescript-debug": "^2.0.0",
+    "purescript-console": "^2.0.0"
   }
 }

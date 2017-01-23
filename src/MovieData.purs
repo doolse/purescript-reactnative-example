@@ -14,10 +14,14 @@ import Data.String (Pattern(..), split)
 import Global (readInt)
 import Network.HTTP.Affjax (AJAX, affjax, defaultRequest, get)
 import Network.HTTP.RequestHeader (RequestHeader(..))
+import ReactNative.Components.Navigator (Navigator)
+import ReactNative.Components.NavigatorIOS (NavigatorIOS)
 import ReactNative.PropTypes (ImageSource, uriSrc)
 import ReactNative.PropTypes.Color (rgbi)
 import ReactNative.Styles (Styles, staticStyles)
 import ReactNative.Styles.Text (color)
+
+data MovieNavigator = MovieNavigator Navigator | MovieNavigatorIOS NavigatorIOS
 
 type MovieR r = {
     id :: String
@@ -134,10 +138,11 @@ latestRTMovies = do
 
 searchOMDB :: forall eff. String -> Aff (ajax::AJAX|eff) (Array OMDBMovie)
 searchOMDB q = do
-  {response} <- affjax $ defaultRequest {headers=[RequestHeader "Accept-Encoding" "identity"], url=(omdbUrl <> "?type=movie&s=" <> q)}
+  {response} <- affjax $ defaultRequest {headers=[RequestHeader "Accept-Encoding" "identity"], url=searchUrl}
   either ((error <<< show) >>> throwError) handleResponse $ runExcept $ (readJSON response)
   where
     handleResponse (OMDBResponse {results}) = pure results
+    searchUrl = omdbUrl <> "?type=movie&s=" <> q
 
 
 
