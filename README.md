@@ -1,6 +1,6 @@
 # Example purescript-reactnative Movie app
 
-This is a [`purescript-reactnative`](https://github.com/doolse/purescript-reactnative) & [`purescript-react-simpelaction`](https://github.com/doolse/purescript-react-simpleaction) based port of the [Movies](https://github.com/facebook/react-native/tree/master/Examples/Movies) example react native app, with a couple of differences at the moment:
+This is a [`purescript-reactnative`](https://github.com/doolse/purescript-reactnative) & [`purescript-dispatcher-react`](https://github.com/doolse/purescript-dispatcher-react) based port of the [Movies](https://github.com/facebook/react-native/tree/master/Examples/Movies) example react native app, with a couple of differences at the moment:
 
 - It points to https://www.omdbapi.com/ instead of rotten tomatoes
 - Scrolling beyond the first 10 results is not supported yet
