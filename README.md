@@ -33,9 +33,11 @@ adb reverse tcp:8081 tcp:8081
 ![screenshot](./screenshot_ios.gif)
 
 ```bash
-npm install
-npm start
-npm run build:ios
+yarn inistall
+yarn start
+yarn build:ios
 ```
 
-Note: If you have some issues to fetch data with Simulator set `Allow Arbitrary Loads` to `YES` in `info.plist` (via http://stackoverflow.com/a/38219454/2032698)
+Some notes:
+- If you have some issues to fetch data with Simulator set `Allow Arbitrary Loads` to `YES` in `info.plist` (via http://stackoverflow.com/a/38219454/2032698)
+- If you might have some issues upgrading to React Native `0.40.0` (such as `'React/RCTEventEmitter.h' file not found` or similar) clean your XCode project and build core `React` in XCode as described by @LoopIndigo in  [issue #12042](https://github.com/facebook/react-native/issues/12042#issuecomment-275025960)
