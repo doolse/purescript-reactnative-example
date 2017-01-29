@@ -33,7 +33,7 @@ adb reverse tcp:8081 tcp:8081
 ![screenshot](./screenshot_ios.gif)
 
 ```bash
-yarn inistall
+yarn install
 yarn start
 yarn build:ios
 ```
