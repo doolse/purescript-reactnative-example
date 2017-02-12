@@ -154,5 +154,5 @@ instance omdbMovie :: MovieClass OMDBMovie where
                                           , url= url m }
     pure <<< either (Left <<< show) (pure <<< unwrapDetails) <<< runExcept $ readJSON response
       where
-        url movie = omdbUrl <> "?i=44444" <> movie.id <> "&plot=full&tomatoes=true"
+        url movie = omdbUrl <> "?i=" <> movie.id <> "&plot=full&tomatoes=true"
         unwrapDetails (OMDBDetails o) = o
