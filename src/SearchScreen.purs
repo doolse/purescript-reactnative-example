@@ -4,8 +4,8 @@ import Prelude
 import Control.Monad.Aff (Canceler, cancel, forkAff, later', nonCanceler)
 import Control.Monad.Aff.AVar (AVar, makeVar', putVar, takeVar)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Exception (error)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (error)
 import Control.Monad.Reader (ask, runReaderT)
 import Control.Monad.Writer.Trans (lift)
 import Data.Either (either)
@@ -25,7 +25,7 @@ import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRo
 import ReactNative.Components.Navigator (Navigator, push)
 import ReactNative.Components.NavigatorIOS (NavigatorIOS, mkRoute)
 import ReactNative.Components.NavigatorIOS (push) as NIOS
-import ReactNative.Components.ScrollView (keyboardDismissMode, scrollTo)
+import ReactNative.Components.ScrollView (keyboardDismissMode, keyboardShouldPersistTaps, scrollTo)
 import ReactNative.Components.Text (text)
 import ReactNative.Components.View (view, view')
 import ReactNative.Platform (platformOS, Platform(..))
@@ -87,7 +87,7 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
           -- , onEndReached=onEndReached
           -- , automaticallyAdjustContentInsets=false
           , keyboardDismissMode=keyboardDismissMode.onDrag
-          , keyboardShouldPersistTaps= true-- "handled"
+          , keyboardShouldPersistTaps=keyboardShouldPersistTaps.always
           , showsVerticalScrollIndicator=false
         } s.dataSource (rowRenderer' renderRow)
       ]

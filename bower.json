@@ -18,7 +18,7 @@
   "dependencies": {
     "purescript-affjax": "^3.0.2",
     "purescript-dispatcher-react": "^1.0.0",
-    "purescript-reactnative": "^2.39.0"
+    "purescript-reactnative": "git://github.com/sectore/purescript-reactnative.git#rn0.41.2"
   },
   "devDependencies": {
     "purescript-debug": "^2.0.0",
