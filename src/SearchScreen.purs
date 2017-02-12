@@ -4,10 +4,11 @@ import Prelude
 import Control.Monad.Aff (Canceler, cancel, forkAff, later', nonCanceler)
 import Control.Monad.Aff.AVar (AVar, makeVar', putVar, takeVar)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Reader (ask, runReaderT)
 import Control.Monad.Writer.Trans (lift)
+import Data.Either (either)
 import Data.Function.Uncurried (mkFn3)
 import Data.Maybe (Maybe(Just, Nothing), maybe)
 import Dispatcher (DispatchEffFn(DispatchEffFn))
@@ -19,7 +20,7 @@ import Movie.SearchBar.Ios (searchBar) as SearchBarIos
 import Movies.MovieCell (movieCell)
 import Movies.MovieScreen (movieScreen)
 import React (ReactClass, ReactElement, ReactState, ReadWrite, createElement)
-import ReactNative.API (keyboardDismiss)
+import ReactNative.API (alert, keyboardDismiss)
 import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRowCount, listView', listViewDataSource, rowRenderer')
 import ReactNative.Components.Navigator (Navigator, push)
 import ReactNative.Components.NavigatorIOS (NavigatorIOS, mkRoute)
@@ -102,6 +103,7 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
     renderFooter = view sheet.scrollSpinner []
 
     eval ScrollTop = unsafeWithRef (scrollTo {x:0,y:0}) "listview"
+
     eval (Search q) = do
       {running} <- getState
       av <- maybe createAvar pure running
@@ -112,19 +114,33 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
       where
         doSearch = do
             modifyState _ {isLoading=true, filter=q, dataSource=listViewDataSource []}
-            movies <- lift $ searchOMDB q
-            modifyState \s -> s {dataSource=cloneWithRows s.dataSource movies, isLoading=false}
+            result <- lift $ searchOMDB q
+            either (\msg -> do
+                      modifyState \s -> s { dataSource=listViewDataSource []
+                                          ,isLoading=false }
+                      liftEff <<< alert "Error " $ Just msg
+                      )
+                  (\movies -> do
+                      modifyState \s -> s { dataSource=cloneWithRows s.dataSource movies
+                                            , isLoading=false}
+                    )
+                  result
+
         createAvar = do
           a <- lift $ makeVar' nonCanceler
           modifyState _ {running = Just a}
           pure a
 
     eval (Select m) = do
-      pure unit
-      SearchScreenProps {navigator} <- getProps
       liftEff $ keyboardDismiss
-      md <- lift $ loadDetails m
-      lift $ liftEff $ pushRoute navigator md
+      SearchScreenProps {navigator} <- getProps
+      result <- lift $ loadDetails m
+      either alert' (gotoMovieDetail navigator) result
+      where
+        alert' msg =
+          liftEff <<< alert "Error " $ Just msg
+        gotoMovieDetail navigator' movieData =
+          liftEff $ pushRoute navigator' movieData
 
 pushRoute :: forall eff. MovieNavigator -> MovieDetails -> Eff ( state :: ReactState ReadWrite | eff) Unit
 pushRoute (MovieNavigator n) md = push n (ShowMovie md)
