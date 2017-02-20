@@ -5,7 +5,7 @@ import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
-import Data.Either (either)
+import Data.Either (Either(..), either)
 import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
 import Data.Foreign.NullOrUndefined (NullOrUndefined(..))
 import Data.Int (floor)
@@ -45,7 +45,7 @@ newtype OMDBDetails = OMDBDetails MovieDetails
 
 class MovieClass a where
   unwrapMovie :: a -> Movie
-  loadDetails :: forall eff. a -> Aff (ajax::AJAX|eff) MovieDetails
+  loadDetails :: forall eff. a -> Aff (ajax::AJAX|eff) (Either String MovieDetails)
 
 newtype RTActor = RTActor {
   name :: String
@@ -136,10 +136,11 @@ latestRTMovies = do
   {response} <- get (apiUrl <> "lists/movies/in_theaters.json?apikey=" <> apiKey <>"&page_limit=20&page=1")
   either ((error <<< show) >>> throwError) pure $ runExcept $ (readJSON response)
 
-searchOMDB :: forall eff. String -> Aff (ajax::AJAX|eff) (Array OMDBMovie)
+searchOMDB :: forall eff. String -> Aff (ajax::AJAX|eff) (Either String (Array OMDBMovie))
 searchOMDB q = do
-  {response} <- affjax $ defaultRequest {headers=[RequestHeader "Accept-Encoding" "identity"], url=searchUrl}
-  either ((error <<< show) >>> throwError) handleResponse $ runExcept $ (readJSON response)
+  {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
+                                        , url=searchUrl }
+  pure <<< either (Left <<< show) handleResponse <<< runExcept $ readJSON response
   where
     handleResponse (OMDBResponse {results}) = pure results
     searchUrl = omdbUrl <> "?type=movie&s=" <> q
@@ -149,6 +150,9 @@ searchOMDB q = do
 instance omdbMovie :: MovieClass OMDBMovie where
   unwrapMovie (OMDBMovie m) = m
   loadDetails (OMDBMovie m) = do
-    {response} <- affjax $ defaultRequest {headers=[RequestHeader "Accept-Encoding" "identity"], url=(omdbUrl <> "?i=" <> m.id <> "&plot=full&tomatoes=true")}
-    either ((error <<< show) >>> throwError) (pure <<< unwrapDetails) $ runExcept $ (readJSON response)
-      where unwrapDetails (OMDBDetails o) = o
+    {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
+                                          , url= url m }
+    pure <<< either (Left <<< show) (pure <<< unwrapDetails) <<< runExcept $ readJSON response
+      where
+        url movie = omdbUrl <> "?i=" <> movie.id <> "&plot=full&tomatoes=true"
+        unwrapDetails (OMDBDetails o) = o
