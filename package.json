@@ -16,10 +16,10 @@
     "react-native": "0.42.0"
   },
   "devDependencies": {
-    "babel-jest": "18.0.0",
+    "babel-jest": "19.0.0",
     "babel-preset-react-native": "1.9.1",
     "bower": "^1.8.0",
-    "jest": "18.1.0",
+    "jest": "19.0.2",
     "pulp": "^10.0.0",
     "react-test-renderer": "~15.4.0",
     "rimraf": "^2.5.4"
