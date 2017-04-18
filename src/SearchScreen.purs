@@ -1,7 +1,7 @@
 module SearchScreen where
 
 import Prelude
-import Control.Monad.Aff (Canceler, cancel, forkAff, later', nonCanceler)
+import Control.Monad.Aff (Canceler, cancel, forkAff, nonCanceler, delay)
 import Control.Monad.Aff.AVar (AVar, makeVar', putVar, takeVar)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
@@ -11,6 +11,7 @@ import Control.Monad.Writer.Trans (lift)
 import Data.Either (either)
 import Data.Function.Uncurried (mkFn3)
 import Data.Maybe (Maybe(Just, Nothing), maybe)
+import Data.Time.Duration (Milliseconds(..))
 import Dispatcher (DispatchEffFn(DispatchEffFn))
 import Dispatcher.React (createLifecycleComponent, didMount, getProps, getState, modifyState, unsafeWithRef)
 import Movie.Data (MovieDetails, MovieNavigator(..), OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
@@ -107,9 +108,11 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
     eval (Search q) = do
       {running} <- getState
       av <- maybe createAvar pure running
-      lift $ takeVar av >>= flip cancel (error "Stop it")
+      _ <- lift $ takeVar av >>= flip cancel (error "Stop it")
       this <- ask
-      newc <- lift $ forkAff $ later' 200 $ runReaderT doSearch this
+      newc <- lift $ forkAff do
+        delay (Milliseconds 200.0)
+        runReaderT doSearch this
       lift $ putVar av newc
       where
         doSearch = do

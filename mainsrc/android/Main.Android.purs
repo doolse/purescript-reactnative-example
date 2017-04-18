@@ -3,7 +3,7 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff)
 import Data.Array (length)
-import Data.Function.Eff (mkEffFn1)
+import Control.Monad.Eff.Uncurried (mkEffFn1)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)
 import Dispatcher.React (createComponent)

@@ -4,10 +4,10 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExcept)
+import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.?))
+import Data.Argonaut.Decode.Combinators ((.??))
+import Data.Argonaut.Parser (jsonParser)
 import Data.Either (Either(..), either)
-import Data.Foreign.Class (class IsForeign, read, readJSON, readProp)
-import Data.Foreign.NullOrUndefined (NullOrUndefined(..))
 import Data.Int (floor)
 import Data.Maybe (maybe)
 import Data.String (Pattern(..), split)
@@ -50,41 +50,43 @@ class MovieClass a where
 newtype RTActor = RTActor {
   name :: String
 }
-instance rtActorIF :: IsForeign RTActor where
-  read value = do
-    name <- readProp "name" value
+instance rtActorIF :: DecodeJson RTActor where
+  decodeJson value = do
+    o <- decodeJson value
+    name <- o .? "name"
     pure $ RTActor {name}
 
-instance rtMovieIF :: IsForeign RTMovie where
-  read value = do
-    id <- readProp "id" value
-    title <- readProp "title" value
-    ratingsF <- readProp "ratings" value
-    score <- readProp "critics_score" ratingsF
-    year <- readProp "year" value
-    postersF <- readProp "posters" value
-    thumbnail <- readProp "thumbnail" postersF
-    mpaa_rating <- readProp "mpaa_rating" value
-    synopsis <- readProp "synopsis" value
-    (NullOrUndefined actorsM) <- readProp "actors" value
+instance rtMovieIF :: DecodeJson RTMovie where
+  decodeJson value = do
+    o <- decodeJson value
+    id <- o .? "id"
+    title <- o .? "title"
+    score <- o .? "critics_score"
+    year <- o .? "year"
+    thumbnail <- o .? "thumbnail"
+    mpaa_rating <- o .? "mpaa_rating"
+    synopsis <- o .? "synopsis"
+    actorsM <- o .?? "actors"
     let actors = maybe [] (map (\(RTActor {name}) -> name)) actorsM
     pure $ RTMovie $ {id,title,score,year,thumbnail,mpaa_rating,synopsis,actors}
 
-instance omdbMovieIF :: IsForeign OMDBMovie where
-  read value = do
-    title <- readProp "Title" value
-    year <- readProp "Year" value
-    id <- readProp "imdbID" value
-    thumbnail <- readProp "Poster" value
+instance omdbMovieIF :: DecodeJson OMDBMovie where
+  decodeJson value = do
+    o <- decodeJson value
+    title <- o .? "Title"
+    year <- o .? "Year"
+    id <- o .? "imdbID"
+    thumbnail <- o .? "Poster"
     pure $ OMDBMovie $ {id,title,year,thumbnail,score: -1}
 
-instance omdbDetailsIF :: IsForeign OMDBDetails where
-  read value = do
-    (OMDBMovie {id,title,year,thumbnail}) <- read value
-    synopsis <- readProp "Plot" value
-    mpaa_rating <- readProp "Rated" value
-    score <- parseInt (-1) <$> readProp "tomatoMeter" value
-    actors_ <- readProp "Actors" value
+instance omdbDetailsIF :: DecodeJson OMDBDetails where
+  decodeJson value = do
+    (OMDBMovie {id,title,year,thumbnail}) <- decodeJson value
+    o <- decodeJson value
+    synopsis <- o .? "Plot"
+    mpaa_rating <- o .? "Rated"
+    score <- parseInt (-1) <$> o .? "tomatoMeter"
+    actors_ <- o .? "Actors"
     pure $ OMDBDetails $ {id,title,year,thumbnail,score,mpaa_rating, synopsis,actors:split (Pattern ",\\w.") actors_}
 
 newtype OMDBResponse = OMDBResponse {
@@ -96,13 +98,14 @@ parseInt :: Int -> String -> Int
 parseInt d "N/A" = d
 parseInt d s = floor $ readInt 10 s
 
-instance omdbSR :: IsForeign OMDBResponse where
-  read value = do
-    resp <- readProp "Response" value
+instance omdbSR :: DecodeJson OMDBResponse where
+  decodeJson value = do
+    o <- decodeJson value
+    resp <- o .? "Response"
     case resp of
       "True" -> do
-        results <- readProp "Search" value
-        totalResults <- parseInt (-1) <$> readProp "totalResults" value
+        results <- o .? "Search"
+        totalResults <- parseInt (-1) <$> o .? "totalResults"
         pure $ OMDBResponse {totalResults, results}
       _ -> pure $ OMDBResponse {totalResults: -1, results:[]}
 
@@ -134,13 +137,13 @@ omdbUrl = "http://www.omdbapi.com/"
 latestRTMovies :: forall eff. Aff (ajax::AJAX|eff) (Array RTMovie)
 latestRTMovies = do
   {response} <- get (apiUrl <> "lists/movies/in_theaters.json?apikey=" <> apiKey <>"&page_limit=20&page=1")
-  either ((error <<< show) >>> throwError) pure $ runExcept $ (readJSON response)
+  either ((error <<< show) >>> throwError) pure $ (jsonParser response >>= decodeJson)
 
 searchOMDB :: forall eff. String -> Aff (ajax::AJAX|eff) (Either String (Array OMDBMovie))
 searchOMDB q = do
   {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
                                         , url=searchUrl }
-  pure <<< either (Left <<< show) handleResponse <<< runExcept $ readJSON response
+  pure $ either (Left <<< show) handleResponse $ jsonParser response >>= decodeJson
   where
     handleResponse (OMDBResponse {results}) = pure results
     searchUrl = omdbUrl <> "?type=movie&s=" <> q
@@ -152,7 +155,7 @@ instance omdbMovie :: MovieClass OMDBMovie where
   loadDetails (OMDBMovie m) = do
     {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
                                           , url= url m }
-    pure <<< either (Left <<< show) (pure <<< unwrapDetails) <<< runExcept $ readJSON response
+    pure $ either (Left <<< show) (pure <<< unwrapDetails) $ jsonParser response >>= decodeJson
       where
         url movie = omdbUrl <> "?i=" <> movie.id <> "&plot=full&tomatoes=true"
         unwrapDetails (OMDBDetails o) = o
