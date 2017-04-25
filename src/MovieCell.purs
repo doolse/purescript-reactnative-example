@@ -3,6 +3,7 @@ module Movies.MovieCell where
 import Prelude
 import Movie.Data (Movie, getImageSource, getStyleFromScore, getTextFromScore)
 import React (ReactElement)
+import ReactNative.Components (iosProps)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.Text (text, text', textElem, texts')
 import ReactNative.Components.Touchable (touchableHighlight)
@@ -31,8 +32,8 @@ movieCell m p =
     in (touchableView platformOS) p.onSelect $ view sheet.row [
         image sheet.cellImage (getImageSource m)
       , view sheet.textContainer [
-          text' _ {style=sheet.movieTitle, numberOfLines=2} m.title
-        , texts' _ {style=sheet.movieYear, numberOfLines=1} [
+          text' {style:sheet.movieTitle, numberOfLines:2, ios:iosProps {allowFontScaling:true}} m.title
+        , texts' {style:sheet.movieYear, numberOfLines:1} [
             textElem $ m.year <> " "
           , text (getStyleFromScore score) $ "Critics " <> getTextFromScore score
           ]

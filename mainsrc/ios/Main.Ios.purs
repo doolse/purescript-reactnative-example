@@ -23,7 +23,7 @@ sheet = {
 appIos :: ReactClass Unit
 appIos = createComponent unit render unit
   where
-    render _ = navigatorIOS' _{style = sheet.container} initialRoute
+    render _ = navigatorIOS' {style: sheet.container, initialRoute}
     initialRoute = mkRoute {
       title: "Movies"
       , component: searchScreenIos

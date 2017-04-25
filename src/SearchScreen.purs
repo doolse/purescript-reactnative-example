@@ -82,15 +82,17 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
           , isLoading }
 
       , view sheet.separator []
-      , if getRowCount s.dataSource == 0 then noMovies else listView' _ { ref= unsafeRef "listview"
-          , renderSeparator=mkFn3 renderSeparator
-          , renderFooter = \_ -> renderFooter
+      , if getRowCount s.dataSource == 0 then noMovies else listView' { ref: unsafeRef "listview"
+          , renderSeparator: mkFn3 renderSeparator
+          , renderFooter: \_ -> renderFooter
           -- , onEndReached=onEndReached
           -- , automaticallyAdjustContentInsets=false
-          , keyboardDismissMode=keyboardDismissMode.onDrag
-          , keyboardShouldPersistTaps=keyboardShouldPersistTaps.always
-          , showsVerticalScrollIndicator=false
-        } s.dataSource (rowRenderer' renderRow)
+          , keyboardDismissMode: keyboardDismissMode.onDrag
+          , keyboardShouldPersistTaps: keyboardShouldPersistTaps.always
+          , showsVerticalScrollIndicator: false
+          , dataSource: s.dataSource
+          , renderRow: rowRenderer' renderRow
+        }
       ]
       where
         renderRow m _ _ _ = movieCell (unwrapMovie m) {onSelect: d \_ -> Select m}
@@ -99,7 +101,7 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
                             else if s.isLoading then "" else "No results for \"" <> s.filter <> "\""
 
     renderSeparator s r h = let style = if h then styles' [ sheet.rowSeparator, sheet.rowSeparatorHide ] else sheet.rowSeparator
-      in view' _ {key="SEP_" <> s <> r, style=style} []
+      in view' {key:"SEP_" <> s <> r, style} []
 
     renderFooter = view sheet.scrollSpinner []
 

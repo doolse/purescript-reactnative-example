@@ -38,12 +38,12 @@ sheet = {
 appAndroid :: ReactClass Unit
 appAndroid = createComponent unit render unit
   where
-    render _ = navigator' _ { ref = refFunc $ mkEffFn1 addBackListener
-                              , style = sheet.container
-                              , configureScene = sceneConfig sceneConfigs.fadeAndroid
+    render _ = navigator' { ref: refFunc $ mkEffFn1 addBackListener
+                              , style: sheet.container
+                              , configureScene: sceneConfig sceneConfigs.fadeAndroid
+                              , initialRoute
+                              , renderScene: sceneRenderer routeMapper                              
                             }
-                            initialRoute
-                            (sceneRenderer routeMapper)
     addBackListener navU = case toMaybe navU of
         Just nav -> addBackEventCallback $ mkEffFn1 \_ ->
                       if (length $ getCurrentRoutes nav) > 1 then pop nav *> pure true
@@ -52,12 +52,12 @@ appAndroid = createComponent unit render unit
     initialRoute = Search
     routeMapper Search nav = searchScreenAndroid {navigator: nav}
     routeMapper (ShowMovie movie) nav  = view (styles [flex 1]) [
-      toolbarAndroid' _ {style=sheet.toolbar
-        , actions=[]
-        , titleColor=white
-        , title = movie.title
-        , navIcon=nativeImageSource {android:"android_back_white", height:96, width:96}
-        , onIconClicked = mkEffFn1 \_ -> pop nav
+      toolbarAndroid' {style: sheet.toolbar
+        , actions:[]
+        , titleColor:white
+        , title: movie.title
+        , navIcon: nativeImageSource {android:"android_back_white", height:96, width:96}
+        , onIconClicked: mkEffFn1 \_ -> pop nav
         } []
     , movieScreen {movie}
     ]

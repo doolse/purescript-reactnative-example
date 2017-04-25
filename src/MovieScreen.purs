@@ -13,7 +13,7 @@ import ReactNative.Styles.Flex (alignSelf, flexDirection, flexStart, justifyCont
 import ReactNative.Styles.Text (fontFamily, fontSize, fontWeight, weight500)
 
 movieScreen :: forall r. {movie::MovieDetails|r} -> ReactElement
-movieScreen props = scrollView' _ {contentContainerStyle=sheet.contentContainer} [
+movieScreen props = scrollView' {contentContainerStyle: sheet.contentContainer} [
     view sheet.mainSection [
       image sheet.detailsImage $ getImageSource movie
     , view sheet.rightPane [
@@ -42,7 +42,7 @@ movieScreen props = scrollView' _ {contentContainerStyle=sheet.contentContainer}
     ]
     cast = view_ $ [
       text sheet.castTitle "Actors"
-    ] <> ((\name -> text' _ {key=name, style=sheet.castActor} name) <$> movie.actors)
+    ] <> ((\name -> text' {key:name, style:sheet.castActor} name) <$> movie.actors)
 
 
 sheet :: { contentContainer :: Styles

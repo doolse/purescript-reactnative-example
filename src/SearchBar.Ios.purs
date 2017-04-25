@@ -16,15 +16,15 @@ searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
 searchBarClass = createComponent unit render unit
   where
     render _ (ReactProps p) = view sheet.searchBar [
-      textInput' _ {
-        ref = unsafeRef "input"
-      , autoCapitalize = autoCapitalize.none
-      , onChange = p.onSearchChange
-      , placeholder =  "Search a movie..."
-      , onFocus = p.onFocus
-      , style = sheet.searchBarInput
+      textInput' {
+        ref: unsafeRef "input"
+      , autoCapitalize: autoCapitalize.none
+      , onChange: p.onSearchChange
+      , placeholder:  "Search a movie..."
+      , onFocus: p.onFocus
+      , style: sheet.searchBarInput
       }
-    , activityIndicator' _ {size=large, style=sheet.spinner} p.isLoading
+    , activityIndicator' {size:large, style:sheet.spinner, animating: p.isLoading}
     ]
 
 searchBar :: forall eff. SearchBarProps eff -> ReactElement

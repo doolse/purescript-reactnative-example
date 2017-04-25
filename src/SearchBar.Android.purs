@@ -24,24 +24,24 @@ searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
 searchBarClass = createComponent unit render unit
   where
     render _ (ReactProps p) (DispatchEffFn d) = view sheet.searchBar [
-        touchableNativeFeedback' _ {background=searchBGColor, onPress=d $ effEval $ \_ -> unsafeWithRef focus "input"} $
+        touchableNativeFeedback' {background:searchBGColor, onPress:d $ effEval $ \_ -> unsafeWithRef focus "input"} $
           view_ [ image sheet.icon $ nativeImageSource {
                   android: "android_search_white",
                   width: 96,
                   height: 96
                 } ]
-      , textInput' _ {
-          ref = unsafeRef "input"
-        , autoCapitalize = autoCapitalize.none
-        , autoCorrect = false
-        , autoFocus = true
-        , onChange = p.onSearchChange
-        , placeholder =  "Search a movie..."
-        , placeholderTextColor = rgba 255 255 255 0.5
-        , onFocus = p.onFocus
-        , style = sheet.searchBarInput
+      , textInput' {
+          ref: unsafeRef "input"
+        , autoCapitalize: autoCapitalize.none
+        , autoCorrect: false
+        , autoFocus: true
+        , onChange: p.onSearchChange
+        , placeholder:  "Search a movie..."
+        , placeholderTextColor: rgba 255 255 255 0.5
+        , onFocus: p.onFocus
+        , style: sheet.searchBarInput
         }
-      , activityIndicator' _ {color=white, size=large, style=sheet.spinner} p.isLoading
+      , activityIndicator' {color:white, size:large, style:sheet.spinner, animating: p.isLoading}
       ]
 
 searchBar :: forall eff. SearchBarProps eff -> ReactElement
