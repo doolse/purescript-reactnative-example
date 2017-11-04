@@ -1,19 +1,26 @@
 module Movies.MovieScreen where
 
 import Prelude
+
+import Data.Maybe (Maybe, maybe)
 import Movie.Data (MovieDetails, getImageSource, getStyleFromScore, getTextFromScore)
-import React (ReactElement)
+import React (ReactClass, ReactElement, createClassStateless)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.ScrollView (scrollView')
-import ReactNative.Components.Text (text, text', text_)
+import ReactNative.Components.Text (text, text', textElem, text_)
 import ReactNative.Components.View (view, view_)
+import ReactNative.Navigation (Navigation, navState)
 import ReactNative.PropTypes.Color (black, rgba, rgbi)
 import ReactNative.Styles (Styles, backgroundColor, borderColor, borderWidth, flex, hairlineWidth, height, marginBottom, marginLeft, marginRight, marginTop, marginVertical, padding, paddingHorizontal, staticStyles, styles', width)
 import ReactNative.Styles.Flex (alignSelf, flexDirection, flexStart, justifyContent, row, spaceBetween)
 import ReactNative.Styles.Text (fontFamily, fontSize, fontWeight, weight500)
 
-movieScreen :: forall r. {movie::MovieDetails|r} -> ReactElement
-movieScreen props = scrollView' {contentContainerStyle: sheet.contentContainer} [
+movieScreenClass :: ReactClass {navigation::Navigation {movie::Maybe MovieDetails}}
+movieScreenClass = createClassStateless render
+    where render {navigation} = maybe (textElem "") movieScreen (navState navigation).params.movie
+
+movieScreen :: MovieDetails -> ReactElement
+movieScreen movie = scrollView' {contentContainerStyle: sheet.contentContainer} [
     view sheet.mainSection [
       image sheet.detailsImage $ getImageSource movie
     , view sheet.rightPane [
@@ -31,7 +38,6 @@ movieScreen props = scrollView' {contentContainerStyle: sheet.contentContainer} 
   , cast
   ]
   where
-    movie = props.movie
     sep = view sheet.separator []
     ratings = view_ [
       rating movie.score "Critics"

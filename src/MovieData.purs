@@ -14,14 +14,10 @@ import Data.String (Pattern(..), split)
 import Global (readInt)
 import Network.HTTP.Affjax (AJAX, affjax, defaultRequest, get)
 import Network.HTTP.RequestHeader (RequestHeader(..))
-import ReactNative.Components.Navigator (Navigator)
-import ReactNative.Components.NavigatorIOS (NavigatorIOS)
 import ReactNative.PropTypes (ImageSource, uriSrc)
 import ReactNative.PropTypes.Color (rgbi)
 import ReactNative.Styles (Styles, staticStyles)
 import ReactNative.Styles.Text (color)
-
-data MovieNavigator = MovieNavigator (Navigator Route) | MovieNavigatorIOS NavigatorIOS
 
 type MovieR r = {
     id :: String
@@ -134,6 +130,9 @@ apiKey = "???"
 omdbUrl :: String
 omdbUrl = "http://www.omdbapi.com/"
 
+omdbKey :: String
+omdbKey = "16824787"
+
 latestRTMovies :: forall eff. Aff (ajax::AJAX|eff) (Array RTMovie)
 latestRTMovies = do
   {response} <- get (apiUrl <> "lists/movies/in_theaters.json?apikey=" <> apiKey <>"&page_limit=20&page=1")
@@ -146,7 +145,7 @@ searchOMDB q = do
   pure $ either (Left <<< show) handleResponse $ jsonParser response >>= decodeJson
   where
     handleResponse (OMDBResponse {results}) = pure results
-    searchUrl = omdbUrl <> "?type=movie&s=" <> q
+    searchUrl = omdbUrl <> "?apikey=" <> omdbKey <> "&type=movie&s=" <> q
 
 
 
@@ -157,5 +156,5 @@ instance omdbMovie :: MovieClass OMDBMovie where
                                           , url= url m }
     pure $ either (Left <<< show) (pure <<< unwrapDetails) $ jsonParser response >>= decodeJson
       where
-        url movie = omdbUrl <> "?i=" <> movie.id <> "&plot=full&tomatoes=true"
+        url movie = omdbUrl <> "?i=" <> movie.id <> "&plot=full&tomatoes=true&apikey=" <> omdbKey
         unwrapDetails (OMDBDetails o) = o

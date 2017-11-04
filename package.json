@@ -6,15 +6,17 @@
     "postinstall": "./node_modules/.bin/bower cache clean && ./node_modules/.bin/bower install",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest",
-    "build:ios": "rimraf output && pulp build --include mainsrc/ios --to index.ios.js",
-    "watch:ios": "rimraf output && pulp -w build --include mainsrc/ios --to index.ios.js",
-    "build:android": "pulp build --include mainsrc/android --to index.android.js",
-    "watch:android": "pulp -w build --include mainsrc/android --to index.android.js"
+    "build:ios": "rimraf output && pulp build --to index.js",
+    "watch:ios": "rimraf output && pulp -w build --to index.js",
+    "build:android": "pulp build --to index.js",
+    "watch:android": "pulp -w build --to index.js"
   },
   "dependencies": {
+    "create-react-class": "^15.6.0",
     "pulp": "^11.0.0",
-    "react": "~15.4.0",
-    "react-native": "0.42.0"
+    "react": "^16.0.0",
+    "react-native": "^0.50.1",
+    "react-navigation": "^1.0.0-beta.19"
   },
   "devDependencies": {
     "babel-jest": "19.0.0",

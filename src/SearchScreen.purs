@@ -1,8 +1,8 @@
 module SearchScreen where
 
 import Prelude
-import Control.Monad.Aff (Canceler, cancel, forkAff, nonCanceler, delay)
-import Control.Monad.Aff.AVar (AVar, makeVar', putVar, takeVar)
+
+import Control.Monad.Aff (Fiber, delay, forkAff, killFiber)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (error)
@@ -14,21 +14,18 @@ import Data.Maybe (Maybe(Just, Nothing), maybe)
 import Data.Time.Duration (Milliseconds(..))
 import Dispatcher (DispatchEffFn(DispatchEffFn))
 import Dispatcher.React (createLifecycleComponent, didMount, getProps, getState, modifyState, unsafeWithRef)
-import Movie.Data (MovieDetails, MovieNavigator(..), OMDBMovie, Route(ShowMovie), loadDetails, searchOMDB, unwrapMovie)
+import Movie.Data (MovieDetails, OMDBMovie, loadDetails, searchOMDB, unwrapMovie)
 import Movie.SearchBar (SearchBarProps)
 import Movie.SearchBar.Android (searchBar) as SearchBarAndroid
 import Movie.SearchBar.Ios (searchBar) as SearchBarIos
 import Movies.MovieCell (movieCell)
-import Movies.MovieScreen (movieScreen)
-import React (ReactClass, ReactElement, ReactState, ReadWrite, createElement)
+import React (ReactClass, ReactElement, ReactState, ReadWrite)
 import ReactNative.API (alert, keyboardDismiss)
 import ReactNative.Components.ListView (ListViewDataSource, cloneWithRows, getRowCount, listView', listViewDataSource, rowRenderer')
-import ReactNative.Components.Navigator (Navigator, push)
-import ReactNative.Components.NavigatorIOS (NavigatorIOS, mkRoute)
-import ReactNative.Components.NavigatorIOS (push) as NIOS
 import ReactNative.Components.ScrollView (keyboardDismissMode, keyboardShouldPersistTaps, scrollTo)
 import ReactNative.Components.Text (text)
 import ReactNative.Components.View (view, view')
+import ReactNative.Navigation (Navigation, navigate)
 import ReactNative.Platform (platformOS, Platform(..))
 import ReactNative.PropTypes (center, unsafeRef)
 import ReactNative.PropTypes.Color (rgba, rgbi, white)
@@ -43,7 +40,7 @@ type State eff = {
   , dataSource:: ListViewDataSource MyMovie
   , filter:: String
   , queryNumber:: Int
-  , running :: Maybe (AVar (Canceler eff))
+  , running :: Maybe (Fiber eff Unit)
 }
 
 data Action = Search String | Select MyMovie | ScrollTop
@@ -58,17 +55,7 @@ initialState = {
   , queryNumber: 0
 }
 
-newtype SearchScreenProps = SearchScreenProps {
-  navigator :: MovieNavigator
-}
-
-searchScreenAndroid :: forall p. { navigator :: Navigator Route | p } -> ReactElement
-searchScreenAndroid props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigator props.navigator}) []
-
-searchScreenIos :: forall p. { navigator :: NavigatorIOS | p } -> ReactElement
-searchScreenIos props = createElement searchScreenClass (SearchScreenProps {navigator: MovieNavigatorIOS props.navigator}) []
-
-searchScreenClass :: ReactClass SearchScreenProps
+searchScreenClass :: ReactClass { navigation :: Navigation {movie::Maybe MovieDetails} }
 searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones") initialState render eval
   where
     searchBarViewByPlatform :: forall eff'. Platform -> SearchBarProps eff' -> ReactElement
@@ -109,13 +96,12 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
 
     eval (Search q) = do
       {running} <- getState
-      av <- maybe createAvar pure running
-      _ <- lift $ takeVar av >>= flip cancel (error "Stop it")
       this <- ask
       newc <- lift $ forkAff do
         delay (Milliseconds 200.0)
         runReaderT doSearch this
-      lift $ putVar av newc
+      modifyState _{running=Just newc}
+      lift $ maybe (pure unit) (killFiber (error "")) running
       where
         doSearch = do
             modifyState _ {isLoading=true, filter=q, dataSource=listViewDataSource []}
@@ -131,32 +117,18 @@ searchScreenClass = createLifecycleComponent (didMount $ Search "indiana jones")
                     )
                   result
 
-        createAvar = do
-          a <- lift $ makeVar' nonCanceler
-          modifyState _ {running = Just a}
-          pure a
-
     eval (Select m) = do
       liftEff $ keyboardDismiss
-      SearchScreenProps {navigator} <- getProps
+      {navigation} <- getProps
+      let gotoMovieDetail movieData = liftEff $ pushRoute navigation movieData
       result <- lift $ loadDetails m
-      either alert' (gotoMovieDetail navigator) result
+      either alert' gotoMovieDetail result
       where
         alert' msg =
           liftEff <<< alert "Error " $ Just msg
-        gotoMovieDetail navigator' movieData =
-          liftEff $ pushRoute navigator' movieData
 
-pushRoute :: forall eff. MovieNavigator -> MovieDetails -> Eff ( state :: ReactState ReadWrite | eff) Unit
-pushRoute (MovieNavigator n) md = push n (ShowMovie md)
-pushRoute (MovieNavigatorIOS n) md =
-  NIOS.push n (mkMovieRoute md)
-    where
-        mkMovieRoute movie = mkRoute
-          {   title: movie.title
-            , component: movieScreen
-            , passProps: {movie}
-          }
+pushRoute :: forall eff. Navigation {movie::Maybe MovieDetails} -> MovieDetails -> Eff ( state :: ReactState ReadWrite | eff) Unit
+pushRoute n md = navigate n "showMovie" {movie: Just md}
 
 sheet :: { container :: Styles
 , centerText :: Styles
