@@ -18,8 +18,8 @@
   "dependencies": {
     "purescript-affjax": "^5.0.0",
     "purescript-dispatcher-react": "^3.1.0",
-    "purescript-reactnative": "^5.0.0",
-    "purescript-argonaut-codecs": "^3.2.0",
+    "purescript-reactnative": "^5.0.1",
+    "purescript-argonaut-codecs": "^3.3.0",
     "purescript-reactnative-navigation": "doolse/purescript-reactnative-navigation"
   },
   "devDependencies": {
