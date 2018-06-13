@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Maybe (Maybe, maybe)
 import Movie.Data (MovieDetails, getImageSource, getStyleFromScore, getTextFromScore)
-import React (ReactClass, ReactElement, createClassStateless)
+import React (ReactClass, ReactElement, statelessComponent)
 import ReactNative.Components.Image (image)
 import ReactNative.Components.ScrollView (scrollView')
 import ReactNative.Components.Text (text, text', textElem, text_)
@@ -16,7 +16,7 @@ import ReactNative.Styles.Flex (alignSelf, flexDirection, flexStart, justifyCont
 import ReactNative.Styles.Text (fontFamily, fontSize, fontWeight, weight500)
 
 movieScreenClass :: ReactClass {navigation::Navigation {movie::Maybe MovieDetails}}
-movieScreenClass = createClassStateless render
+movieScreenClass = statelessComponent render
     where render {navigation} = maybe (textElem "") movieScreen (navState navigation).params.movie
 
 movieScreen :: MovieDetails -> ReactElement

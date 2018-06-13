@@ -2,9 +2,9 @@ module Movie.SearchBar where
 
 import ReactNative.Events (TextInputEvent, EventHandler)
 
-type SearchBarProps eff = {
-    onSearchChange :: EventHandler eff TextInputEvent
-  , onFocus :: EventHandler eff TextInputEvent
+type SearchBarProps = {
+    onSearchChange :: EventHandler TextInputEvent
+  , onFocus :: EventHandler TextInputEvent
   , isLoading :: Boolean
 }
 

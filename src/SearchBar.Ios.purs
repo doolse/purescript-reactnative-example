@@ -1,9 +1,10 @@
 module Movie.SearchBar.Ios where
 
 import Prelude
-import Dispatcher.React (ReactProps(..), createComponent)
+
+import Dispatcher.React (propsRenderer)
 import Movie.SearchBar (SearchBarProps)
-import React (ReactClass, ReactElement, createElement)
+import React (ReactClass, ReactElement, component, createLeafElement)
 import ReactNative.Components.ActivityIndicator (activityIndicator', large)
 import ReactNative.Components.TextInput (autoCapitalize, textInput')
 import ReactNative.Components.View (view)
@@ -12,10 +13,11 @@ import ReactNative.Styles (Styles, flex, height, marginTop, padding, paddingLeft
 import ReactNative.Styles.Flex (alignItems, flexDirection, row)
 import ReactNative.Styles.Text (fontSize)
 
-searchBarClass :: forall eff. ReactClass (SearchBarProps eff)
-searchBarClass = createComponent unit render unit
+searchBarClass :: ReactClass SearchBarProps
+searchBarClass = component "SearchBarIOS" spec 
   where
-    render _ (ReactProps p) = view sheet.searchBar [
+    spec this = pure $ {render: propsRenderer render this }
+    render p = view sheet.searchBar [
       textInput' {
         ref: unsafeRef "input"
       , autoCapitalize: autoCapitalize.none
@@ -27,8 +29,8 @@ searchBarClass = createComponent unit render unit
     , activityIndicator' {size:large, style:sheet.spinner, animating: p.isLoading}
     ]
 
-searchBar :: forall eff. SearchBarProps eff -> ReactElement
-searchBar p = createElement searchBarClass p []
+searchBar :: SearchBarProps -> ReactElement
+searchBar = createLeafElement searchBarClass
 
 sheet :: {
     searchBar :: Styles

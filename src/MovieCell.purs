@@ -17,16 +17,16 @@ import ReactNative.Styles (Styles, backgroundColor, flex, hairlineWidth, height,
 import ReactNative.Styles.Flex (alignItems, flexDirection, row)
 import ReactNative.Styles.Text (color, fontSize, fontWeight, weight500)
 
-type Props eff = {
+type Props = {
     key :: String
   , movie :: Movie
-  , onSelect :: EventHandler eff TouchEvent
+  , onSelect :: EventHandler TouchEvent
 }
 
-movieCell :: forall eff. Movie -> {onSelect::EventHandler eff TouchEvent} -> ReactElement
+movieCell :: Movie -> {onSelect::EventHandler TouchEvent} -> ReactElement
 movieCell m p =
     let score = m.score
-        touchableView :: forall eff'. Platform -> EventHandler eff' TouchEvent -> ReactElement -> ReactElement
+        touchableView :: Platform -> EventHandler TouchEvent -> ReactElement -> ReactElement
         touchableView IOS = touchableHighlight
         touchableView Android = touchableNativeFeedback
     in (touchableView platformOS) p.onSelect $ view sheet.row [

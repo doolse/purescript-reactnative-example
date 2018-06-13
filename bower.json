@@ -16,14 +16,14 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-affjax": "^5.0.0",
-    "purescript-dispatcher-react": "^3.1.0",
-    "purescript-reactnative": "^5.0.1",
-    "purescript-argonaut-codecs": "^3.3.0",
+    "purescript-affjax": "^6.0.0",
+    "purescript-dispatcher-react": "^4.0.0",
+    "purescript-reactnative": "^6.0.2",
+    "purescript-argonaut-codecs": "^4.0.0",
     "purescript-reactnative-navigation": "doolse/purescript-reactnative-navigation"
   },
   "devDependencies": {
-    "purescript-debug": "^3.0.0",
-    "purescript-console": "^3.0.0"
+    "purescript-debug": "^4.0.0",
+    "purescript-console": "^4.1.0"
   }
 }

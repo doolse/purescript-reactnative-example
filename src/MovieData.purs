@@ -1,8 +1,7 @@
 module Movie.Data where
 
 import Prelude
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Exception (error)
+
 import Control.Monad.Error.Class (throwError)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.?))
 import Data.Argonaut.Decode.Combinators ((.??))
@@ -11,8 +10,10 @@ import Data.Either (Either(..), either)
 import Data.Int (floor)
 import Data.Maybe (maybe)
 import Data.String (Pattern(..), split)
+import Effect.Aff (Aff, error)
 import Global (readInt)
-import Network.HTTP.Affjax (AJAX, affjax, defaultRequest, get)
+import Network.HTTP.Affjax (affjax, defaultRequest, get)
+import Network.HTTP.Affjax.Response (string)
 import Network.HTTP.RequestHeader (RequestHeader(..))
 import ReactNative.PropTypes (ImageSource, uriSrc)
 import ReactNative.PropTypes.Color (rgbi)
@@ -41,7 +42,7 @@ newtype OMDBDetails = OMDBDetails MovieDetails
 
 class MovieClass a where
   unwrapMovie :: a -> Movie
-  loadDetails :: forall eff. a -> Aff (ajax::AJAX|eff) (Either String MovieDetails)
+  loadDetails :: a -> Aff (Either String MovieDetails)
 
 newtype RTActor = RTActor {
   name :: String
@@ -133,14 +134,14 @@ omdbUrl = "http://www.omdbapi.com/"
 omdbKey :: String
 omdbKey = "16824787"
 
-latestRTMovies :: forall eff. Aff (ajax::AJAX|eff) (Array RTMovie)
+latestRTMovies :: Aff (Array RTMovie)
 latestRTMovies = do
-  {response} <- get (apiUrl <> "lists/movies/in_theaters.json?apikey=" <> apiKey <>"&page_limit=20&page=1")
+  {response} <- get string (apiUrl <> "lists/movies/in_theaters.json?apikey=" <> apiKey <>"&page_limit=20&page=1")
   either ((error <<< show) >>> throwError) pure $ (jsonParser response >>= decodeJson)
 
-searchOMDB :: forall eff. String -> Aff (ajax::AJAX|eff) (Either String (Array OMDBMovie))
+searchOMDB :: String -> Aff (Either String (Array OMDBMovie))
 searchOMDB q = do
-  {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
+  {response} <- affjax string $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
                                         , url=searchUrl }
   pure $ either (Left <<< show) handleResponse $ jsonParser response >>= decodeJson
   where
@@ -152,7 +153,7 @@ searchOMDB q = do
 instance omdbMovie :: MovieClass OMDBMovie where
   unwrapMovie (OMDBMovie m) = m
   loadDetails (OMDBMovie m) = do
-    {response} <- affjax $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
+    {response} <- affjax string $ defaultRequest { headers=[RequestHeader "Accept-Encoding" "identity"]
                                           , url= url m }
     pure $ either (Left <<< show) (pure <<< unwrapDetails) $ jsonParser response >>= decodeJson
       where

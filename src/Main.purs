@@ -2,24 +2,14 @@ module Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Uncurried (mkEffFn1)
-import Data.Array (length)
-import Data.Maybe (Maybe(..))
-import Data.Nullable (toMaybe)
-import Dispatcher.React (createComponent)
-import Movie.Data (Route(ShowMovie, Search))
-import Movies.MovieScreen (movieScreen, movieScreenClass)
-import React (ReactClass, createElement)
-import ReactNative.API (REGISTER, registerComponent)
-import ReactNative.Android.API (addBackEventCallback)
-import ReactNative.Android.Components (toolbarAndroid')
-import ReactNative.Components.View (view)
+import Effect (Effect)
+import Movies.MovieScreen (movieScreenClass)
+import React (ReactClass)
+import ReactNative.API (registerComponent)
 import ReactNative.Navigation (navAware, route)
 import ReactNative.Navigation.Stack (stackNavigator)
-import ReactNative.PropTypes (nativeImageSource, refFunc)
 import ReactNative.PropTypes.Color (rgbi, white)
-import ReactNative.Styles (Styles, backgroundColor, flex, height, staticStyles, styles)
+import ReactNative.Styles (Styles, backgroundColor, flex, height, staticStyles)
 import SearchScreen (searchScreenClass)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -38,16 +28,11 @@ sheet = {
   ]
 }
 
-navigator :: ReactClass Unit
+navigator :: ReactClass {}
 navigator = stackNavigator {headerMode:"none"} (unsafeCoerce {
     "search" : route {screen: navAware searchScreenClass},
     "showMovie" : route {screen: navAware movieScreenClass}
 })
-
-app :: ReactClass Unit
-app = createComponent unit render unit
-  where
-    render _ = createElement navigator unit []
 
     -- navigator' { ref: refFunc $ mkEffFn1 addBackListener
     --                           , style: sheet.container
@@ -74,5 +59,5 @@ app = createComponent unit render unit
     -- ]
 
 
-main :: forall eff. Eff ( register :: REGISTER | eff) Unit
-main = registerComponent "reactnativeMovieExample" app
+main :: Effect Unit
+main = registerComponent "reactnativeMovieExample" navigator
